@@ -1,0 +1,8 @@
+manager:
+  collectorImage:
+    repository: otel/opentelemetry-collector-contrib
+  featureGatesMap:
+    operator.autoinstrumentation.go: true
+admissionWebhooks:
+  certManager:
+    enabled: true

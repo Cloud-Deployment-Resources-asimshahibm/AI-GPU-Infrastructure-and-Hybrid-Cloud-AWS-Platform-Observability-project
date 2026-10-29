@@ -1,0 +1,8 @@
+Observability onboarded for {{ include "obs.name" . }} (team {{ include "obs.team" . }}).
+- Metrics: ServiceMonitor scraping port "{{ .Values.observability.port }}" (sample limit {{ .Values.observability.sampleLimit }})
+- SLOs: availability {{ .Values.observability.slo.availability }}%, latency {{ .Values.observability.slo.latencyObjective }}% under {{ .Values.observability.slo.latencyThresholdSeconds }}s
+- Dashboard: Grafana folder "{{ include "obs.team" . }}"
+{{- if .Values.observability.instrumentation.language }}
+- Auto-instrumentation: annotate your pod template with
+  instrumentation.opentelemetry.io/inject-{{ .Values.observability.instrumentation.language }}: "observability/default"
+{{- end }}

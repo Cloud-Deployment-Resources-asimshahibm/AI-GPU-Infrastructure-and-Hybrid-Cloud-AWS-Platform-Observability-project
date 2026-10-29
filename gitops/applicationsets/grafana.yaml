@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: grafana
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'grafana-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "4"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://grafana.github.io/helm-charts
+          chart: grafana
+          targetRevision: 8.5.2
+          helm:
+            releaseName: grafana
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/grafana/values.yaml
+              - $values/gitops/values/grafana/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/grafana/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

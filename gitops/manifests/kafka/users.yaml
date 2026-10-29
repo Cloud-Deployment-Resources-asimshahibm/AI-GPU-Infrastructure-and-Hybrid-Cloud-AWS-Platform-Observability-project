@@ -1,0 +1,26 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: fluent-bit
+  namespace: observability
+  labels: { strimzi.io/cluster: obs-kafka }
+spec:
+  authentication: { type: scram-sha-512 }
+  authorization:
+    type: simple
+    acls:
+      - { resource: { type: topic, name: logs.raw }, operations: [Write, Describe] }
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: vector
+  namespace: observability
+  labels: { strimzi.io/cluster: obs-kafka }
+spec:
+  authentication: { type: scram-sha-512 }
+  authorization:
+    type: simple
+    acls:
+      - { resource: { type: topic, name: logs.raw }, operations: [Read, Describe] }
+      - { resource: { type: group, name: vector-logs }, operations: [Read] }

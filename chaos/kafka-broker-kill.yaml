@@ -1,0 +1,11 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: kafka-broker-kill
+  namespace: observability
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [observability]
+    labelSelectors: { strimzi.io/cluster: obs-kafka, strimzi.io/kind: Kafka }

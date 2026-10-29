@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: strimzi
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'strimzi-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://strimzi.io/charts
+          chart: strimzi-kafka-operator
+          targetRevision: 0.43.0
+          helm:
+            releaseName: strimzi
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/strimzi/values.yaml
+              - $values/gitops/values/strimzi/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/strimzi/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

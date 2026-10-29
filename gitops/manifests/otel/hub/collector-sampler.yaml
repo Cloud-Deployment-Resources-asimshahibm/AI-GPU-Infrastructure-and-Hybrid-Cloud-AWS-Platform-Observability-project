@@ -1,0 +1,54 @@
+# Tier 2: tail sampling, then Tempo (tenant = team attribute)
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-sampler
+  namespace: observability
+spec:
+  mode: statefulset
+  replicas: 3
+  resources:
+    limits: { memory: 4Gi }
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc: { endpoint: 0.0.0.0:4317 }
+    processors:
+      memory_limiter: { check_interval: 1s, limit_percentage: 80, spike_limit_percentage: 20 }
+      tail_sampling:
+        decision_wait: 10s
+        num_traces: 200000
+        policies:
+          - { name: errors, type: status_code, status_code: { status_codes: [ERROR] } }
+          - { name: slow, type: latency, latency: { threshold_ms: 2000 } }
+          - { name: gpu-inference, type: string_attribute, string_attribute: { key: gen_ai.request.model, values: [".*"], enabled_regex_matching: true } }
+          - { name: baseline, type: probabilistic, probabilistic: { sampling_percentage: 10 } }
+      batch: { send_batch_size: 2048, timeout: 2s }
+    connectors:
+      routing:
+        default_pipelines: [traces/shared]
+        table:
+          - statement: route() where resource.attributes["team"] == "ai-platform"
+            pipelines: [traces/ai-platform]
+    exporters:
+      otlp/tempo-shared:
+        endpoint: tempo-distributor.observability:4317
+        tls: { insecure: true }
+        headers: { X-Scope-OrgID: shared }
+      otlp/tempo-ai:
+        endpoint: tempo-distributor.observability:4317
+        tls: { insecure: true }
+        headers: { X-Scope-OrgID: ai-platform }
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, tail_sampling, batch]
+          exporters: [routing]
+        traces/shared:
+          receivers: [routing]
+          exporters: [otlp/tempo-shared]
+        traces/ai-platform:
+          receivers: [routing]
+          exporters: [otlp/tempo-ai]

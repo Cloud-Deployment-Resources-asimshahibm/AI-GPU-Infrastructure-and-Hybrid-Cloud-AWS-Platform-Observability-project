@@ -1,0 +1,36 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: observability-platform
+  namespace: monitoring
+  labels: { scope: global }
+spec:
+  service: observability-platform
+  labels: { team: observability-platform, tier: "0" }
+  slos:
+    - name: thanos-query-availability
+      objective: 99.9
+      sli:
+        events:
+          errorQuery: sum(rate(http_requests_total{job=~".*thanos-query.*",code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(http_requests_total{job=~".*thanos-query.*"}[{{.window}}]))
+      alerting:
+        name: ThanosQueryAvailability
+        labels: { team: observability-platform }
+        annotations:
+          runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/watchdog-missing.md
+        pageAlert: { labels: { severity: page } }
+        ticketAlert: { labels: { severity: ticket } }
+    - name: loki-ingestion-success
+      objective: 99.95
+      sli:
+        events:
+          errorQuery: sum(rate(loki_request_duration_seconds_count{route=~"loki_api_v1_push",status_code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(loki_request_duration_seconds_count{route=~"loki_api_v1_push"}[{{.window}}]))
+      alerting:
+        name: LokiIngestion
+        labels: { team: observability-platform }
+        annotations:
+          runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/kafka-consumer-lag.md
+        pageAlert: { labels: { severity: page } }
+        ticketAlert: { labels: { severity: ticket } }

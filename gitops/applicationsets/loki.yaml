@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: loki
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'loki-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://grafana.github.io/helm-charts
+          chart: loki
+          targetRevision: 6.18.0
+          helm:
+            releaseName: loki
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/loki/values.yaml
+              - $values/gitops/values/loki/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/loki/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

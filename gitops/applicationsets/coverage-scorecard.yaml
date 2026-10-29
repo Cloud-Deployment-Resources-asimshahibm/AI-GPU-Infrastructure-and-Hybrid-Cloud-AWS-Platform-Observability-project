@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: coverage-scorecard
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'coverage-scorecard-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "7"
+    spec:
+      project: observability
+      source:
+        repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        targetRevision: main
+        path: tools/coverage-scorecard/deploy
+        directory:
+          recurse: true
+          include: '*.yaml'
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

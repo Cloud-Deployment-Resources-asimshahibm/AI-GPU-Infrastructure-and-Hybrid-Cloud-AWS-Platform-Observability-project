@@ -1,0 +1,15 @@
+observability:
+  service: ""            # required, matches the pod label `service`
+  team: ""               # required, tenant + alert routing
+  tier: 2                # 1 = pages, 2 = tickets
+  port: http-metrics     # container port name exposing /metrics
+  path: /metrics
+  interval: 30s
+  sampleLimit: 20000     # label budget guardrail
+  instrumentation:
+    language: ""         # python | java | nodejs | dotnet | go -> OTel auto-instrumentation annotation hint
+  slo:
+    availability: 99.5
+    latencyThresholdSeconds: 0.5
+    latencyObjective: 95
+  gpu: false             # adds GPU panels to the dashboard

@@ -1,0 +1,35 @@
+[SERVICE]
+    Flush         5
+    Log_Level     info
+    storage.path  /var/lib/fluent-bit/buffer
+    storage.backlog.mem_limit 64M
+
+[INPUT]
+    Name          systemd
+    Tag           host.*
+    storage.type  filesystem
+
+[INPUT]
+    Name          tail
+    Path          /var/log/slurm/*.log,/var/log/nvidia-*.log
+    Tag           gpu.*
+    storage.type  filesystem
+
+[FILTER]
+    Name          record_modifier
+    Match         *
+    Record        cluster {{ cluster_name }}
+    Record        datacenter {{ datacenter }}
+    Record        host {{ inventory_hostname }}
+
+[OUTPUT]
+    Name          kafka
+    Match         *
+    Brokers       {{ kafka_bootstrap }}
+    Topics        logs.raw
+    Format        json
+    rdkafka.security.protocol SASL_SSL
+    rdkafka.sasl.mechanism    SCRAM-SHA-512
+    rdkafka.sasl.username     {{ kafka_user }}
+    rdkafka.sasl.password     {{ lookup('env', 'KAFKA_PASSWORD') }}
+    rdkafka.ssl.ca.location   /etc/ssl/certs/obs-ca.pem

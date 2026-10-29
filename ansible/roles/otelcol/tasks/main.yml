@@ -1,0 +1,16 @@
+- name: Install otelcol-contrib
+  ansible.builtin.apt:
+    deb: "https://github.com/open-telemetry/opentelemetry-collector-releases/releases/download/v{{ otelcol_version }}/otelcol-contrib_{{ otelcol_version }}_linux_amd64.deb"
+
+- name: Configure collector
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/otelcol-contrib/config.yaml
+    mode: "0640"
+  notify: Restart otelcol
+
+- name: Enable collector
+  ansible.builtin.systemd:
+    name: otelcol-contrib
+    enabled: true
+    state: started

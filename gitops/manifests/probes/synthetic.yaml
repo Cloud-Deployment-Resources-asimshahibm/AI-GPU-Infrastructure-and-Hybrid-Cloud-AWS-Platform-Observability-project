@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: user-facing-endpoints
+  namespace: observability
+  labels: { team: observability-platform }
+spec:
+  interval: 60s
+  module: http_2xx
+  prober: { url: prometheus-blackbox-exporter.observability:9115 }
+  targets:
+    staticConfig:
+      static:
+        - https://api.example.com/healthz
+        - https://grafana.example.com/api/health
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: inference-synthetic
+  namespace: observability
+  labels: { team: ai-platform }
+spec:
+  interval: 60s
+  module: inference_post
+  prober: { url: prometheus-blackbox-exporter.observability:9115 }
+  targets:
+    staticConfig:
+      static: [https://api.example.com/v1/completions]

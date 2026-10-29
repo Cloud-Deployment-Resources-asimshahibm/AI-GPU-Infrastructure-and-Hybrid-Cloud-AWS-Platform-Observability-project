@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: opentelemetry-operator
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub, gpu, aws, azure] }
+  template:
+    metadata:
+      name: 'opentelemetry-operator-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+          chart: opentelemetry-operator
+          targetRevision: 0.71.2
+          helm:
+            releaseName: opentelemetry-operator
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/opentelemetry-operator/values.yaml
+              - $values/gitops/values/opentelemetry-operator/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/opentelemetry-operator/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: opentelemetry-operator-system
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

@@ -1,0 +1,38 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: inference-api
+  namespace: monitoring
+  labels: { scope: global }
+spec:
+  service: inference-api
+  labels: { team: ai-platform, tier: "1" }
+  slos:
+    - name: requests-availability
+      objective: 99.5
+      description: Share of inference requests that succeed.
+      sli:
+        events:
+          errorQuery: sum(rate(http_server_request_duration_seconds_count{service_name="inference-api",http_response_status_code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(http_server_request_duration_seconds_count{service_name="inference-api"}[{{.window}}]))
+      alerting:
+        name: InferenceAPIAvailability
+        labels: { team: ai-platform }
+        annotations:
+          runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md
+        pageAlert: { labels: { severity: page } }
+        ticketAlert: { labels: { severity: ticket } }
+    - name: time-to-first-token
+      objective: 95
+      description: Share of requests whose first token arrives within 1 second.
+      sli:
+        events:
+          errorQuery: sum(rate(vllm:time_to_first_token_seconds_count[{{.window}}])) - sum(rate(vllm:time_to_first_token_seconds_bucket{le="1.0"}[{{.window}}]))
+          totalQuery: sum(rate(vllm:time_to_first_token_seconds_count[{{.window}}]))
+      alerting:
+        name: InferenceTTFT
+        labels: { team: ai-platform }
+        annotations:
+          runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md
+        pageAlert: { labels: { severity: page } }
+        ticketAlert: { labels: { severity: ticket } }

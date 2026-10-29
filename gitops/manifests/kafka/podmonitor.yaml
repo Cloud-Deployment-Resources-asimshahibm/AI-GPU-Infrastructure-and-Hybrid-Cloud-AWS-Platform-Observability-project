@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: kafka
+  namespace: observability
+spec:
+  selector:
+    matchExpressions:
+      - { key: strimzi.io/kind, operator: In, values: [Kafka] }
+  podMetricsEndpoints:
+    - { port: tcp-prometheus, path: /metrics }

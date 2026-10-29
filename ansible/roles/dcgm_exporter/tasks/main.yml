@@ -1,0 +1,30 @@
+# Requires NVIDIA driver, nvidia-container-toolkit and a container runtime already on the host.
+- name: Install DCGM
+  ansible.builtin.package:
+    name: datacenter-gpu-manager
+    state: present
+
+- name: Enable nv-hostengine
+  ansible.builtin.systemd:
+    name: nvidia-dcgm
+    enabled: true
+    state: started
+
+- name: Copy metrics CSV
+  ansible.builtin.copy:
+    src: ../../../gitops/manifests/gpu/dcgm-metrics.csv
+    dest: /etc/dcgm-exporter/dcgm-metrics.csv
+    mode: "0644"
+
+- name: Run dcgm-exporter container
+  community.docker.docker_container:
+    name: dcgm-exporter
+    image: "{{ dcgm_exporter_image }}"
+    restart_policy: always
+    runtime: nvidia
+    capabilities: [SYS_ADMIN]
+    ports: ["9400:9400"]
+    volumes: ["/etc/dcgm-exporter/dcgm-metrics.csv:/etc/dcgm-exporter/dcgm-metrics.csv:ro"]
+    command: ["-f", "/etc/dcgm-exporter/dcgm-metrics.csv"]
+    env:
+      NVIDIA_VISIBLE_DEVICES: all

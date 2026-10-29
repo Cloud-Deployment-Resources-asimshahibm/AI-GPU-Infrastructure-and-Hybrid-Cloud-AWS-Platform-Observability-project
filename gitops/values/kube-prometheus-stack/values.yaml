@@ -1,0 +1,58 @@
+# Applies to every cluster. Per-role overrides: role-hub.yaml, role-gpu.yaml ...
+crds:
+  enabled: true
+alertmanager:
+  enabled: false            # central Alertmanager runs on the hub only
+grafana:
+  enabled: false            # central Grafana is a separate release on the hub
+kubeStateMetrics:
+  enabled: true
+nodeExporter:
+  enabled: true
+prometheus:
+  thanosService:
+    enabled: true
+  thanosServiceExternal:
+    enabled: true           # internal LB so the hub Thanos Query can reach sidecars
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal
+      service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+  serviceAccount:
+    annotations: {}         # set per cluster: eks.amazonaws.com/role-arn or azure.workload.identity/client-id
+  prometheusSpec:
+    replicas: 2
+    retention: 2d
+    retentionSize: 80GB
+    replicaExternalLabelName: prometheus_replica
+    externalLabels:
+      env: prod
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    enforcedSampleLimit: 200000
+    enforcedLabelLimit: 40
+    podAntiAffinity: hard
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector: { matchLabels: { app.kubernetes.io/name: prometheus } }
+    resources:
+      requests: { cpu: "2", memory: 16Gi }
+      limits: { memory: 24Gi }
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: { requests: { storage: 100Gi } }
+    thanos:
+      objectStorageConfig:
+        existingSecret: { name: thanos-objstore, key: objstore.yml }
+    additionalAlertManagerConfigs:
+      - scheme: https
+        static_configs:
+          - targets: [alertmanager.example.com]
+    tolerations:
+      - { key: dedicated, operator: Equal, value: observability, effect: NoSchedule }

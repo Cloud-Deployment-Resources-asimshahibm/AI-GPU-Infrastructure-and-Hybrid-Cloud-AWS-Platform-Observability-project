@@ -1,0 +1,19 @@
+apiVersion: clickhouse-keeper.altinity.com/v1
+kind: ClickHouseKeeperInstallation
+metadata:
+  name: obs-keeper
+  namespace: observability
+spec:
+  configuration:
+    clusters:
+      - name: keeper
+        layout: { replicasCount: 3 }
+  defaults:
+    templates:
+      volumeClaimTemplate: keeper-storage
+  templates:
+    volumeClaimTemplates:
+      - name: keeper-storage
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources: { requests: { storage: 10Gi } }

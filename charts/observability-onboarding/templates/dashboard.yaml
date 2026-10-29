@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dash-{{ include "obs.name" . }}
+  labels:
+    grafana_dashboard: "1"
+    {{- include "obs.labels" . | nindent 4 }}
+  annotations:
+    grafana_folder: {{ include "obs.team" . }}
+data:
+  {{ include "obs.name" . }}.json: |-
+    {{- $svc := include "obs.name" . }}
+    {
+      "uid": "svc-{{ $svc }}",
+      "title": "{{ $svc }} service",
+      "tags": ["{{ include "obs.team" . }}", "generated"],
+      "schemaVersion": 39,
+      "time": { "from": "now-6h", "to": "now" },
+      "panels": [
+        { "id": 1, "type": "timeseries", "title": "Request rate", "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "thanos" },
+          "targets": [ { "refId": "A", "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"{{ $svc }}\"}[5m]))" } ] },
+        { "id": 2, "type": "timeseries", "title": "Error ratio", "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "thanos" },
+          "fieldConfig": { "defaults": { "unit": "percentunit" } },
+          "targets": [ { "refId": "A", "expr": "sum(rate(http_server_request_duration_seconds_count{service_name=\"{{ $svc }}\",http_response_status_code=~\"5..\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{service_name=\"{{ $svc }}\"}[5m]))" } ] },
+        { "id": 3, "type": "timeseries", "title": "Latency p95", "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "thanos" },
+          "fieldConfig": { "defaults": { "unit": "s" } },
+          "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{service_name=\"{{ $svc }}\"}[5m])))" } ] }
+        {{- if .Values.observability.gpu }},
+        { "id": 4, "type": "timeseries", "title": "GPU utilization (pods of this service)", "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "thanos" },
+          "fieldConfig": { "defaults": { "unit": "percent" } },
+          "targets": [ { "refId": "A", "expr": "avg by (pod) (DCGM_FI_DEV_GPU_UTIL{pod=~\"{{ $svc }}.*\"})" } ] },
+        { "id": 5, "type": "timeseries", "title": "GPU memory used (MiB)", "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+          "datasource": { "type": "prometheus", "uid": "thanos" },
+          "targets": [ { "refId": "A", "expr": "max by (pod) (DCGM_FI_DEV_FB_USED{pod=~\"{{ $svc }}.*\"})" } ] }
+        {{- end }}
+      ]
+    }

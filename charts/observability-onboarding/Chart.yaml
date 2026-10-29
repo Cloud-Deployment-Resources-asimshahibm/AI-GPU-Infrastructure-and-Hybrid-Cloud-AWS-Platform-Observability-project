@@ -1,0 +1,6 @@
+apiVersion: v2
+name: observability-onboarding
+description: Gives a service metrics scraping, SLOs, alerts and a dashboard from a few values
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,21 @@
+# azure-metrics-exporter is query-driven: Prometheus passes the resource query as URL params
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: azure-aks-nodes
+  namespace: observability
+spec:
+  interval: 5m
+  prober:
+    url: azure-metrics-exporter.observability:8080
+    path: /probe/metrics/resourcegraph
+  targets:
+    staticConfig:
+      static: ["aks"]
+      relabelingConfigs: []
+  params:
+    subscription: ["00000000-0000-0000-0000-000000000000"]
+    resourceType: ["Microsoft.ContainerService/managedClusters"]
+    metric: ["node_cpu_usage_percentage", "node_memory_working_set_percentage"]
+    interval: ["PT5M"]
+    aggregation: ["average"]

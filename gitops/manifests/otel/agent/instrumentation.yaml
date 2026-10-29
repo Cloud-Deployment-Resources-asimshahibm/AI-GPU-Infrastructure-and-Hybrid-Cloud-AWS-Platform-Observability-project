@@ -1,0 +1,18 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: default
+  namespace: observability
+spec:
+  exporter:
+    endpoint: http://otel-agent-collector.observability:4318
+  propagators: [tracecontext, baggage]
+  sampler:
+    type: parentbased_always_on
+  python:
+    env:
+      - { name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, value: "true" }
+      - { name: OTEL_LOGS_EXPORTER, value: none }
+  go:
+    env:
+      - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: http://otel-agent-collector.observability:4318 }

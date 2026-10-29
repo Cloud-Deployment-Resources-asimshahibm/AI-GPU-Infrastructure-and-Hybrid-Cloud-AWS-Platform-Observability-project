@@ -1,0 +1,81 @@
+role: Aggregator
+replicas: 3
+podDisruptionBudget: { enabled: true, minAvailable: 2 }
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 12
+  targetCPUUtilizationPercentage: 70
+env:
+  - name: KAFKA_PASSWORD
+    valueFrom: { secretKeyRef: { name: vector-kafka, key: password } }
+  - name: CLICKHOUSE_PASSWORD
+    valueFrom: { secretKeyRef: { name: clickhouse-vector, key: password } }
+service:
+  ports:
+    - { name: prom-exporter, port: 9598, protocol: TCP }
+customConfig:
+  data_dir: /vector-data-dir
+  api: { enabled: true, address: 0.0.0.0:8686 }
+  sources:
+    kafka_in:
+      type: kafka
+      bootstrap_servers: obs-kafka-kafka-bootstrap.observability:9093
+      group_id: vector-logs
+      topics: [logs.raw]
+      decoding: { codec: json }
+      sasl: { enabled: true, mechanism: SCRAM-SHA-512, username: vector, password: "${KAFKA_PASSWORD}" }
+      tls: { enabled: true, ca_file: /etc/kafka-ca/ca.crt }
+    internal:
+      type: internal_metrics
+  transforms:
+    clean:
+      type: remap
+      inputs: [kafka_in]
+      source: |
+        if exists(.log) && is_string(.log) {
+          parsed, err = parse_json(.log)
+          if err == null { . = merge!(., parsed) }
+        }
+        .message = redact(string(.message) ?? "", filters: ["us_social_security_number", r'(?i)bearer\s+[a-z0-9._\-]+', r'(?i)(api[_-]?key|password)\s*[=:]\s*\S+'])
+        .tenant = .kubernetes.namespace_labels.team ?? "shared"
+        .level = downcase(string(.level) ?? "info")
+        .app = .kubernetes.labels.app ?? .kubernetes.labels."app.kubernetes.io/name" ?? "unknown"
+        .namespace = .kubernetes.namespace_name ?? "host"
+    drop_noise:
+      type: filter
+      inputs: [clean]
+      condition: '!(.level == "debug" && .namespace != "ai-inference") && !match(string(.message) ?? "", r''GET /(healthz|readyz|livez|metrics)'')'
+    route:
+      type: route
+      inputs: [drop_noise]
+      route:
+        inference: '.event_type == "inference"'
+  sinks:
+    loki:
+      type: loki
+      inputs: [drop_noise]
+      endpoint: http://loki-gateway.observability
+      tenant_id: "{{ tenant }}"
+      encoding: { codec: json }
+      labels:
+        cluster: "{{ cluster }}"
+        namespace: "{{ namespace }}"
+        app: "{{ app }}"
+        level: "{{ level }}"
+      structured_metadata:
+        trace_id: "{{ trace_id }}"
+      buffer: { type: disk, max_size: 5368709120, when_full: block }
+    clickhouse_inference:
+      type: clickhouse
+      inputs: [route.inference]
+      endpoint: http://clickhouse-obs-analytics.observability:8123
+      database: observability
+      table: inference_events
+      auth: { strategy: basic, user: vector, password: "${CLICKHOUSE_PASSWORD}" }
+      skip_unknown_fields: true
+      buffer: { type: disk, max_size: 2147483648, when_full: block }
+    prom:
+      type: prometheus_exporter
+      inputs: [internal]
+      address: 0.0.0.0:9598

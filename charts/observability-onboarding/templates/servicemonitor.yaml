@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "obs.name" . }}
+  labels:
+    {{- include "obs.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      service: {{ include "obs.name" . }}
+  sampleLimit: {{ .Values.observability.sampleLimit }}
+  endpoints:
+    - port: {{ .Values.observability.port }}
+      path: {{ .Values.observability.path }}
+      interval: {{ .Values.observability.interval }}
+      relabelings:
+        - targetLabel: team
+          replacement: {{ include "obs.team" . }}

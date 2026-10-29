@@ -1,0 +1,19 @@
+pyroscope:
+  replicaCount: 2
+  extraArgs:
+    store-gateway.sharding-ring.replication-factor: "2"
+  config: |
+    storage:
+      backend: s3
+      s3:
+        bucket_name: acme-obs-profiles-prod
+        region: us-east-1
+        endpoint: s3.us-east-1.amazonaws.com
+    limits:
+      compactor_blocks_retention_period: 336h
+  serviceAccount:
+    name: pyroscope
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/acme-obs-pyroscope
+alloy:
+  enabled: true        # eBPF CPU profiling on every node

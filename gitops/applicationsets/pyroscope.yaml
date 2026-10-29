@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pyroscope
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'pyroscope-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://grafana.github.io/helm-charts
+          chart: pyroscope
+          targetRevision: 1.8.0
+          helm:
+            releaseName: pyroscope
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/pyroscope/values.yaml
+              - $values/gitops/values/pyroscope/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/pyroscope/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: vllm
+  namespace: gpu-operator
+spec:
+  namespaceSelector: { any: true }
+  selector:
+    matchLabels: { app.kubernetes.io/component: model-server }
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: "vllm:(time_to_first_token_seconds.*|e2e_request_latency_seconds.*|num_requests_(running|waiting)|gpu_cache_usage_perc|prompt_tokens_total|generation_tokens_total|request_success_total)"
+          action: keep

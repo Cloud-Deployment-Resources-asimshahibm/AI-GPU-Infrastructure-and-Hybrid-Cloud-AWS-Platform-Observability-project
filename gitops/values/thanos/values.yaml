@@ -1,0 +1,52 @@
+existingObjstoreSecret: thanos-objstore
+serviceAccount:
+  create: true
+  name: thanos
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/acme-obs-thanos
+query:
+  enabled: true
+  replicaCount: 3
+  replicaLabel: [prometheus_replica, rule_replica]
+  dnsDiscovery:
+    enabled: true
+    sidecarsService: kube-prometheus-stack-thanos-discovery
+    sidecarsNamespace: monitoring
+  stores:
+    # Sidecars in other clusters (internal load balancers, gRPC 10901)
+    - thanos-sidecar.gpu-dc1.example.com:10901
+    - thanos-sidecar.eks-prod-use1.example.com:10901
+    - thanos-sidecar.aks-prod-eastus.example.com:10901
+  extraFlags:
+    - --query.auto-downsampling
+    - --query.promql-engine=thanos
+  pdb: { create: true, minAvailable: 2 }
+queryFrontend:
+  enabled: true
+  replicaCount: 2
+  config: |-
+    type: IN-MEMORY
+    config:
+      max_size: 1GB
+      validity: 1h
+storegateway:
+  enabled: true
+  replicaCount: 2
+  persistence: { enabled: true, size: 50Gi }
+  sharded:
+    enabled: true
+    timePartitioning:
+      - { min: "", max: -14d }
+      - { min: -14d, max: "" }
+compactor:
+  enabled: true
+  retentionResolutionRaw: 30d
+  retentionResolution5m: 90d
+  retentionResolution1h: 395d
+  persistence: { enabled: true, size: 200Gi }
+  extraFlags: [--deduplication.replica-label=prometheus_replica, --compact.concurrency=4]
+ruler:
+  enabled: false        # ThanosRuler CR from kube-prometheus-stack on the hub is used instead
+metrics:
+  enabled: true
+  serviceMonitor: { enabled: true }

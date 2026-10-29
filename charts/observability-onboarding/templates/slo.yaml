@@ -1,0 +1,43 @@
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: {{ include "obs.name" . }}
+  labels:
+    scope: global
+    {{- include "obs.labels" . | nindent 4 }}
+spec:
+  service: {{ include "obs.name" . }}
+  labels:
+    team: {{ include "obs.team" . }}
+    tier: {{ .Values.observability.tier | quote }}
+  slos:
+    - name: availability
+      objective: {{ .Values.observability.slo.availability }}
+      sli:
+        events:
+          errorQuery: sum(rate(http_server_request_duration_seconds_count{service_name="{{ include "obs.name" . }}",http_response_status_code=~"5.."}[{{ "{{.window}}" }}]))
+          totalQuery: sum(rate(http_server_request_duration_seconds_count{service_name="{{ include "obs.name" . }}"}[{{ "{{.window}}" }}]))
+      alerting:
+        name: {{ include "obs.name" . | replace "-" "" | title }}Availability
+        labels:
+          team: {{ include "obs.team" . }}
+        annotations:
+          runbook_url: https://runbooks.example.com/{{ include "obs.name" . }}
+        pageAlert:
+          labels: { severity: {{ include "obs.severity" . }} }
+        ticketAlert:
+          labels: { severity: ticket }
+    - name: latency
+      objective: {{ .Values.observability.slo.latencyObjective }}
+      sli:
+        events:
+          errorQuery: sum(rate(http_server_request_duration_seconds_count{service_name="{{ include "obs.name" . }}"}[{{ "{{.window}}" }}])) - sum(rate(http_server_request_duration_seconds_bucket{service_name="{{ include "obs.name" . }}",le="{{ .Values.observability.slo.latencyThresholdSeconds }}"}[{{ "{{.window}}" }}]))
+          totalQuery: sum(rate(http_server_request_duration_seconds_count{service_name="{{ include "obs.name" . }}"}[{{ "{{.window}}" }}]))
+      alerting:
+        name: {{ include "obs.name" . | replace "-" "" | title }}Latency
+        labels:
+          team: {{ include "obs.team" . }}
+        pageAlert:
+          labels: { severity: {{ include "obs.severity" . }} }
+        ticketAlert:
+          labels: { severity: ticket }

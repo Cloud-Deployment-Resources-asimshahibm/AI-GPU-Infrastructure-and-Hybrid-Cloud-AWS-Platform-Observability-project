@@ -1,0 +1,22 @@
+# Fills GPU memory on one inference node to test GPUMemoryNearlyFull alerts and inference SLO burn.
+# Replace the image with your approved GPU burn-in image.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-memory-pressure
+  namespace: ai-inference
+  labels: { team: ai-platform, service: chaos-gpu }
+spec:
+  activeDeadlineSeconds: 900
+  template:
+    metadata:
+      labels: { team: ai-platform, service: chaos-gpu }
+    spec:
+      restartPolicy: Never
+      tolerations: [{ key: nvidia.com/gpu, operator: Exists, effect: NoSchedule }]
+      containers:
+        - name: burn
+          image: registry.example.com/tools/gpu-burn:latest
+          args: ["-m", "95%", "600"]
+          resources:
+            limits: { nvidia.com/gpu: 1 }

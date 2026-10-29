@@ -1,0 +1,28 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-observability-labels
+  annotations:
+    policies.kyverno.io/description: Every workload must carry team and service labels so telemetry can be routed to its owner.
+spec:
+  validationFailureAction: Audit     # switch to Enforce after rollout wave 4
+  background: true
+  rules:
+    - name: require-team-service
+      match:
+        any:
+          - resources:
+              kinds: [Deployment, StatefulSet, DaemonSet, Job]
+      exclude:
+        any:
+          - resources:
+              namespaces: [kube-system, kube-public, argocd, monitoring, observability, gpu-operator, cert-manager, external-secrets, kyverno]
+      validate:
+        message: "Labels 'team' and 'service' are required on pod templates."
+        pattern:
+          spec:
+            template:
+              metadata:
+                labels:
+                  team: "?*"
+                  service: "?*"

@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: sloth
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'sloth-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://slok.github.io/sloth
+          chart: sloth
+          targetRevision: 0.11.0
+          helm:
+            releaseName: sloth
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/sloth/values.yaml
+              - $values/gitops/values/sloth/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/sloth/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

@@ -1,0 +1,30 @@
+# Synthetic series at ~3x expected load to validate Prometheus/Thanos sizing before go-live.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avalanche
+  namespace: observability
+  labels: { team: observability-platform, service: avalanche }
+spec:
+  replicas: 10
+  selector:
+    matchLabels: { app: avalanche }
+  template:
+    metadata:
+      labels: { app: avalanche, team: observability-platform, service: avalanche }
+    spec:
+      containers:
+        - name: avalanche
+          image: quay.io/prometheuscommunity/avalanche:main
+          args: ["--gauge-metric-count=200", "--series-count=500", "--label-count=10", "--series-interval=3600", "--metric-interval=86400", "--port=9001"]
+          ports: [{ name: metrics, containerPort: 9001 }]
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: avalanche
+  namespace: observability
+spec:
+  selector:
+    matchLabels: { app: avalanche }
+  podMetricsEndpoints: [{ port: metrics, interval: 30s }]

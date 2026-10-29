@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "argocd": { "fileMatch": ["^gitops/.+\\.yaml$"] },
+  "packageRules": [
+    { "matchManagers": ["argocd", "helmv3"], "groupName": "observability charts", "schedule": ["before 6am on monday"] },
+    { "matchUpdateTypes": ["major"], "labels": ["breaking-change-review"] }
+  ]
+}

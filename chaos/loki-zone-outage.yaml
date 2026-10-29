@@ -1,0 +1,13 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: loki-write-zone-a-down
+  namespace: observability
+spec:
+  action: pod-failure
+  mode: all
+  selector:
+    namespaces: [observability]
+    labelSelectors: { app.kubernetes.io/component: write }
+    nodeSelectors: { topology.kubernetes.io/zone: us-east-1a }
+  duration: 30m

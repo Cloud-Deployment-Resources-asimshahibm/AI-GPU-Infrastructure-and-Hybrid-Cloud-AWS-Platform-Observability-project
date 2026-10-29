@@ -1,0 +1,20 @@
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+processors:
+  memory_limiter: { check_interval: 1s, limit_percentage: 80, spike_limit_percentage: 20 }
+  resourcedetection: { detectors: [system], system: { hostname_sources: [os] } }
+  resource:
+    attributes:
+      - { key: k8s.cluster.name, value: "{{ cluster_name }}", action: upsert }
+      - { key: datacenter, value: "{{ datacenter }}", action: upsert }
+  batch: {}
+exporters:
+  otlp:
+    endpoint: {{ otel_gateway_endpoint }}
+    tls: { ca_file: /etc/ssl/certs/obs-ca.pem }
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [memory_limiter, resourcedetection, resource, batch], exporters: [otlp] }

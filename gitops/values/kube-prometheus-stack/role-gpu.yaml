@@ -1,0 +1,11 @@
+prometheus:
+  prometheusSpec:
+    externalLabels: { cluster: gpu-dc1, env: prod, datacenter: dc1 }
+    additionalScrapeConfigs:
+      # Bare-metal GPU hosts managed by Ansible (node_exporter :9100, dcgm-exporter :9400)
+      - job_name: baremetal-node
+        file_sd_configs: [{ files: [/etc/prometheus/sd/baremetal-nodes.json] }]
+      - job_name: baremetal-dcgm
+        file_sd_configs: [{ files: [/etc/prometheus/sd/baremetal-dcgm.json] }]
+      - job_name: infiniband
+        static_configs: [{ targets: ["ib-exporter.dc1.example.com:9683"] }]

@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kyverno
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub, gpu, aws, azure] }
+  template:
+    metadata:
+      name: 'kyverno-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "-4"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://kyverno.github.io/kyverno
+          chart: kyverno
+          targetRevision: 3.2.7
+          helm:
+            releaseName: kyverno
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/kyverno/values.yaml
+              - $values/gitops/values/kyverno/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/kyverno/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: kyverno
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

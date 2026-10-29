@@ -1,0 +1,6 @@
+prometheus:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/acme-obs-thanos
+  prometheusSpec:
+    externalLabels: { cluster: eks-prod-use1, env: prod, cloud: aws }

@@ -1,0 +1,17 @@
+driver:
+  enabled: true              # set false on clusters with drivers pre-installed (see role-aws.yaml)
+toolkit:
+  enabled: true
+dcgmExporter:
+  enabled: true
+  config:
+    name: dcgm-metrics       # ConfigMap from gitops/manifests/gpu/
+  env:
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: /etc/dcgm-exporter/dcgm-metrics.csv
+  serviceMonitor:
+    enabled: true
+    interval: 15s
+    honorLabels: true
+nodeStatusExporter:
+  enabled: true

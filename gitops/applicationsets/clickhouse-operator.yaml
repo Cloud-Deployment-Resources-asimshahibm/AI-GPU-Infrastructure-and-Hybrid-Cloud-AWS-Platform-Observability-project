@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: clickhouse-operator
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'clickhouse-operator-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://docs.altinity.com/clickhouse-operator
+          chart: altinity-clickhouse-operator
+          targetRevision: 0.24.0
+          helm:
+            releaseName: clickhouse-operator
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/clickhouse-operator/values.yaml
+              - $values/gitops/values/clickhouse-operator/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/clickhouse-operator/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

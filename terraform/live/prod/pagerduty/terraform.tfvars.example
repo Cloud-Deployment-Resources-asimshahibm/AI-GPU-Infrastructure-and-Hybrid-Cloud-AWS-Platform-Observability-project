@@ -1,0 +1,6 @@
+rotation_start = "2026-11-02T09:00:00-06:00"
+teams = {
+  "observability-platform" = ["oncall1@example.com", "oncall2@example.com"]
+  "ai-platform"            = ["ml1@example.com", "ml2@example.com"]
+  "sre"                    = ["sre1@example.com", "sre2@example.com"]
+}

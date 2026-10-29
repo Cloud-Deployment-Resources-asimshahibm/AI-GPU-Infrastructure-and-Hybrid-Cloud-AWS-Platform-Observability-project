@@ -1,0 +1,29 @@
+- name: Add Fluent Bit apt key
+  ansible.builtin.get_url:
+    url: https://packages.fluentbit.io/fluentbit.key
+    dest: /usr/share/keyrings/fluentbit.asc
+    mode: "0644"
+
+- name: Add Fluent Bit repo
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/fluentbit.asc] https://packages.fluentbit.io/ubuntu/{{ ansible_distribution_release }} {{ ansible_distribution_release }} main"
+    state: present
+
+- name: Install Fluent Bit
+  ansible.builtin.apt:
+    name: fluent-bit
+    state: present
+    update_cache: true
+
+- name: Configure Fluent Bit
+  ansible.builtin.template:
+    src: fluent-bit.conf.j2
+    dest: /etc/fluent-bit/fluent-bit.conf
+    mode: "0640"
+  notify: Restart fluent-bit
+
+- name: Enable Fluent Bit
+  ansible.builtin.systemd:
+    name: fluent-bit
+    enabled: true
+    state: started

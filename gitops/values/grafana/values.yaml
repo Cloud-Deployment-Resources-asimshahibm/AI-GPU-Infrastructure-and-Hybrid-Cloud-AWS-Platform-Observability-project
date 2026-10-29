@@ -1,0 +1,95 @@
+replicas: 2
+podDisruptionBudget: { minAvailable: 1 }
+persistence: { enabled: false }       # state lives in PostgreSQL
+envFromSecret: grafana-secrets       # GF_DATABASE_PASSWORD, GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET (External Secrets)
+plugins:
+  - grafana-clickhouse-datasource
+  - grafana-pyroscope-app
+grafana.ini:
+  server:
+    root_url: https://grafana.example.com
+  database:
+    type: postgres
+    host: grafana-db.example.com:5432
+    name: grafana
+    user: grafana
+    ssl_mode: require
+  auth:
+    disable_login_form: true
+  auth.generic_oauth:
+    enabled: true
+    name: SSO
+    client_id: grafana
+    scopes: openid profile email groups
+    auth_url: https://sso.example.com/realms/acme/protocol/openid-connect/auth
+    token_url: https://sso.example.com/realms/acme/protocol/openid-connect/token
+    api_url: https://sso.example.com/realms/acme/protocol/openid-connect/userinfo
+    role_attribute_path: contains(groups[*], 'obs-admins') && 'Admin' || contains(groups[*], 'obs-editors') && 'Editor' || 'Viewer'
+    allow_assign_grafana_admin: true
+  unified_alerting:
+    enabled: false
+  feature_toggles:
+    enable: traceToProfiles
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    folderAnnotation: grafana_folder
+    searchNamespace: ALL
+    provider: { foldersFromFilesStructure: true }
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Thanos
+        uid: thanos
+        type: prometheus
+        url: http://thanos-query-frontend.observability:9090
+        isDefault: true
+        jsonData:
+          timeInterval: 30s
+          exemplarTraceIdDestinations:
+            - { name: trace_id, datasourceUid: tempo }
+      - name: Loki
+        uid: loki
+        type: loki
+        url: http://loki-gateway.observability
+        jsonData:
+          derivedFields:
+            - { name: trace_id, matcherRegex: '"trace_id":"(\w+)"', url: '$${__value.raw}', datasourceUid: tempo }
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        url: http://tempo-query-frontend.observability:3100
+        jsonData:
+          serviceMap: { datasourceUid: thanos }
+          nodeGraph: { enabled: true }
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: -5m
+            spanEndTimeShift: 5m
+            filterByTraceID: true
+            tags: [{ key: k8s.namespace.name, value: namespace }, { key: service.name, value: app }]
+          tracesToMetrics:
+            datasourceUid: thanos
+            tags: [{ key: service.name, value: service }]
+          tracesToProfiles:
+            datasourceUid: pyroscope
+            profileTypeId: process_cpu:cpu:nanoseconds:cpu:nanoseconds
+      - name: Pyroscope
+        uid: pyroscope
+        type: grafana-pyroscope-datasource
+        url: http://pyroscope-query-frontend.observability:4040
+      - name: ClickHouse
+        uid: clickhouse
+        type: grafana-clickhouse-datasource
+        jsonData:
+          host: clickhouse-obs-analytics.observability
+          port: 9000
+          protocol: native
+          username: grafana
+        secureJsonData:
+          password: $CLICKHOUSE_GRAFANA_PASSWORD
+tolerations:
+  - { key: dedicated, operator: Equal, value: observability, effect: NoSchedule }

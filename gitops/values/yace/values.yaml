@@ -1,0 +1,41 @@
+serviceAccount:
+  name: yace
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::111122223333:role/acme-obs-yace
+serviceMonitor:
+  enabled: true
+  interval: 300s
+config: |-
+  apiVersion: v1alpha1
+  sts-region: us-east-1
+  discovery:
+    exportedTagsOnMetrics:
+      AWS/EC2: [team, service]
+    jobs:
+      - type: AWS/EC2
+        regions: [us-east-1]
+        period: 300
+        length: 300
+        metrics:
+          - { name: CPUUtilization, statistics: [Average] }
+          - { name: StatusCheckFailed, statistics: [Maximum] }
+      - type: AWS/ApplicationELB
+        regions: [us-east-1]
+        period: 300
+        length: 300
+        metrics:
+          - { name: HTTPCode_Target_5XX_Count, statistics: [Sum] }
+          - { name: TargetResponseTime, statistics: [Average, p95] }
+      - type: AWS/RDS
+        regions: [us-east-1]
+        period: 300
+        length: 300
+        metrics:
+          - { name: CPUUtilization, statistics: [Average] }
+          - { name: FreeStorageSpace, statistics: [Minimum] }
+      - type: AWS/Kafka
+        regions: [us-east-1]
+        period: 300
+        length: 300
+        metrics:
+          - { name: SumOffsetLag, statistics: [Maximum] }

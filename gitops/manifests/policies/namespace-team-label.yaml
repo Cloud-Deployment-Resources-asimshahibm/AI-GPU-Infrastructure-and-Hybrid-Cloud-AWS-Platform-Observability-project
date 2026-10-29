@@ -1,0 +1,20 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-namespace-team
+spec:
+  validationFailureAction: Audit
+  rules:
+    - name: namespace-team
+      match:
+        any:
+          - resources: { kinds: [Namespace] }
+      exclude:
+        any:
+          - resources: { names: ["kube-*", default, argocd, monitoring, observability, gpu-operator, cert-manager, external-secrets, kyverno, opentelemetry-operator-system] }
+      validate:
+        message: "Namespaces need a 'team' label (used as the observability tenant)."
+        pattern:
+          metadata:
+            labels:
+              team: "?*"

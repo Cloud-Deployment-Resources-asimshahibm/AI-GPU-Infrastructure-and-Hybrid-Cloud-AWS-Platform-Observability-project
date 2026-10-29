@@ -1,0 +1,5 @@
+# EKS AL2023 NVIDIA AMIs ship the driver and container toolkit
+driver:
+  enabled: false
+toolkit:
+  enabled: false

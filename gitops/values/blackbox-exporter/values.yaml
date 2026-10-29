@@ -1,0 +1,15 @@
+replicas: 2
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 10s
+      http: { preferred_ip_protocol: ip4 }
+    inference_post:
+      prober: http
+      timeout: 30s
+      http:
+        method: POST
+        headers: { Content-Type: application/json }
+        body: '{"model":"synthetic-probe","prompt":"ping","max_tokens":1}'
+        valid_status_codes: [200]

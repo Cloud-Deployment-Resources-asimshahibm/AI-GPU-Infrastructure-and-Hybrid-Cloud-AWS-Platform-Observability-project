@@ -1,0 +1,8 @@
+- name: Observability agents for on-prem bare-metal GPU hosts
+  hosts: gpu_nodes
+  become: true
+  roles:
+    - node_exporter
+    - dcgm_exporter
+    - fluent_bit
+    - otelcol

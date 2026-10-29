@@ -1,0 +1,21 @@
+rule_files:
+  - ../gpu.yaml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'DCGM_FI_DEV_XID_ERRORS{cluster="gpu-dc1",Hostname="n01",gpu="0",UUID="GPU-1"}'
+        values: '0 0 79 79 79'
+      - series: 'DCGM_FI_DEV_GPU_TEMP{cluster="gpu-dc1",Hostname="n01",gpu="0"}'
+        values: '70+5x10'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: GPUXidError
+        exp_alerts:
+          - exp_labels: { severity: page, team: ai-platform, cluster: gpu-dc1, Hostname: n01, gpu: "0", UUID: GPU-1 }
+            exp_annotations:
+              summary: "XID 79 on GPU 0 of n01 (gpu-dc1)"
+              runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
+      - eval_time: 3m
+        alertname: GPUHighTemperature
+        exp_alerts: []

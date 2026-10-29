@@ -1,0 +1,18 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+# Ansible
+ansible/inventory/hosts.ini
+*.retry
+# Misc
+.DS_Store
+*.whl

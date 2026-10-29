@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub, gpu, aws, azure] }
+  template:
+    metadata:
+      name: 'kube-prometheus-stack-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://prometheus-community.github.io/helm-charts
+          chart: kube-prometheus-stack
+          targetRevision: 65.1.1
+          helm:
+            releaseName: kube-prometheus-stack
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/kube-prometheus-stack/values.yaml
+              - $values/gitops/values/kube-prometheus-stack/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/kube-prometheus-stack/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: monitoring
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

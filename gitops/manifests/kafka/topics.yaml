@@ -1,0 +1,14 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: logs.raw
+  namespace: observability
+  labels: { strimzi.io/cluster: obs-kafka }
+spec:
+  partitions: 48
+  replicas: 3
+  config:
+    retention.ms: 259200000       # 72 h buffer
+    min.insync.replicas: 2
+    compression.type: zstd
+    max.message.bytes: 2097152

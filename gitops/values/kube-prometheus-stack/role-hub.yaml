@@ -1,0 +1,70 @@
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 3
+    secrets: [pagerduty-keys]
+    podAntiAffinity: hard
+    externalUrl: https://alertmanager.example.com
+  config:
+    global:
+      resolve_timeout: 5m
+      slack_api_url_file: /etc/alertmanager/secrets/pagerduty-keys/slack-webhook
+    route:
+      receiver: slack-default
+      group_by: [alertname, cluster, team]
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      routes:
+        - matchers: [alertname = "Watchdog"]
+          receiver: deadmans-switch
+          repeat_interval: 1m
+        - matchers: [severity = "page", team = "ai-platform"]
+          receiver: pd-ai-platform
+        - matchers: [severity = "page", team = "sre"]
+          receiver: pd-sre
+        - matchers: [severity = "page"]
+          receiver: pd-observability-platform
+        - matchers: [severity =~ "warning|ticket"]
+          receiver: slack-default
+    inhibit_rules:
+      - source_matchers: [alertname = "KubeNodeNotReady"]
+        target_matchers: [severity =~ "warning|page"]
+        equal: [cluster, node]
+      - source_matchers: [alertname = "GPUFallenOffBus"]
+        target_matchers: [alertname =~ "GPU.*"]
+        equal: [cluster, Hostname, gpu]
+    receivers:
+      - name: slack-default
+        slack_configs:
+          - channel: "#obs-alerts"
+            send_resolved: true
+            title: '{{ .CommonLabels.alertname }} ({{ .CommonLabels.cluster }})'
+            text: '{{ range .Alerts }}{{ .Annotations.summary }} {{ .Annotations.runbook_url }}{{ "\n" }}{{ end }}'
+      - name: pd-ai-platform
+        pagerduty_configs:
+          - routing_key_file: /etc/alertmanager/secrets/pagerduty-keys/ai-platform
+      - name: pd-sre
+        pagerduty_configs:
+          - routing_key_file: /etc/alertmanager/secrets/pagerduty-keys/sre
+      - name: pd-observability-platform
+        pagerduty_configs:
+          - routing_key_file: /etc/alertmanager/secrets/pagerduty-keys/observability-platform
+      - name: deadmans-switch
+        webhook_configs:
+          - url_file: /etc/alertmanager/secrets/pagerduty-keys/heartbeat-url
+prometheus:
+  prometheusSpec:
+    externalLabels: { cluster: hub-prod, env: prod }
+    enableRemoteWriteReceiver: true      # Tempo metrics-generator writes span metrics here
+    additionalAlertManagerConfigs: []
+thanosRuler:
+  enabled: true
+  thanosRulerSpec:
+    replicas: 2
+    queryEndpoints: [dnssrv+_http._tcp.thanos-query.observability.svc.cluster.local]
+    alertmanagersUrl: [http://kube-prometheus-stack-alertmanager.monitoring:9093]
+    ruleSelector: { matchLabels: { scope: global } }
+    objectStorageConfig:
+      existingSecret: { name: thanos-objstore, key: objstore.yml }
+    labels: { cluster: global }

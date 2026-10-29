@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: gpu-telemetry
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [gpu, aws] }
+  template:
+    metadata:
+      name: 'gpu-telemetry-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      project: observability
+      source:
+        repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        targetRevision: main
+        path: gitops/manifests/gpu
+        directory:
+          recurse: true
+          include: '*.yaml'
+      destination:
+        server: '{{ .server }}'
+        namespace: gpu-operator
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

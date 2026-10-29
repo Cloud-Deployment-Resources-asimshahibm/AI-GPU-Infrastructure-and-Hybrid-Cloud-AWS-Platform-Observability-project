@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: vector
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'vector-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "3"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://helm.vector.dev
+          chart: vector
+          targetRevision: 0.36.1
+          helm:
+            releaseName: vector
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/vector/values.yaml
+              - $values/gitops/values/vector/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/vector/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

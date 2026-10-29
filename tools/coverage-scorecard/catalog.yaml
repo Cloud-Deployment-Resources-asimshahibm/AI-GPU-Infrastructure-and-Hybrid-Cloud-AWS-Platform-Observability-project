@@ -1,0 +1,6 @@
+# Services that must be fully observed. Keep in sync with the service catalog (or generate from Backstage).
+services:
+  - { name: inference-api, team: ai-platform, tier: 1 }
+  - { name: chat-gateway, team: ai-platform, tier: 1 }
+  - { name: embeddings-api, team: ai-platform, tier: 2 }
+  - { name: payments-api, team: sre, tier: 1 }

@@ -1,0 +1,4 @@
+commonPlugins:
+  enabled: true
+labels:
+  scope: global

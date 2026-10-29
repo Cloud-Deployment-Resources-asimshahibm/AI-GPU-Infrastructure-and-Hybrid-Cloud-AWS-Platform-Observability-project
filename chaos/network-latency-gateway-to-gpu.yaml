@@ -1,0 +1,18 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: gateway-to-inference-latency
+  namespace: ai-inference
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [ai-inference]
+    labelSelectors: { service: chat-gateway }
+  delay: { latency: 500ms, jitter: 100ms, correlation: "50" }
+  direction: to
+  target:
+    mode: all
+    selector:
+      labelSelectors: { service: inference-api }
+  duration: 15m

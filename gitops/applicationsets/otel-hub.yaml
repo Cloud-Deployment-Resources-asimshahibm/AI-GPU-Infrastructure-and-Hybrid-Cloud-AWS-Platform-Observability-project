@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: otel-hub
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [hub] }
+  template:
+    metadata:
+      name: 'otel-hub-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "5"
+    spec:
+      project: observability
+      source:
+        repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        targetRevision: main
+        path: gitops/manifests/otel/hub
+        directory:
+          recurse: true
+          include: '*.yaml'
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

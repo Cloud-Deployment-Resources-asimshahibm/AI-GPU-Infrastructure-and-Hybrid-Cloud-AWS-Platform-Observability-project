@@ -1,0 +1,16 @@
+rule_files:
+  - ../meta.yaml
+evaluation_interval: 1m
+tests:
+  - interval: 1m
+    input_series:
+      - series: 'up{job="nvidia-dcgm-exporter",instance="10.0.0.1:9400",cluster="gpu-dc1"}'
+        values: '1 1 0 0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: DCGMExporterDown
+        exp_alerts:
+          - exp_labels: { severity: page, team: observability-platform, job: nvidia-dcgm-exporter, instance: "10.0.0.1:9400", cluster: gpu-dc1 }
+            exp_annotations:
+              summary: "DCGM exporter 10.0.0.1:9400 down on gpu-dc1"
+              runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/dcgm-exporter-down.md

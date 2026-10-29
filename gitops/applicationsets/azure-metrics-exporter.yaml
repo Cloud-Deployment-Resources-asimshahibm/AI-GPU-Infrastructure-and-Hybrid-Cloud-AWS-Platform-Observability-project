@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: azure-metrics-exporter
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - clusters:
+        selector:
+          matchLabels: { obs: enabled }
+          matchExpressions:
+            - { key: role, operator: In, values: [azure] }
+  template:
+    metadata:
+      name: 'azure-metrics-exporter-{{ .name }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "3"
+    spec:
+      project: observability
+      sources:
+        - repoURL: https://webdevops.github.io/helm-charts
+          chart: azure-metrics-exporter
+          targetRevision: 1.2.10
+          helm:
+            releaseName: azure-metrics-exporter
+            ignoreMissingValueFiles: true
+            valueFiles:
+              - $values/gitops/values/azure-metrics-exporter/values.yaml
+              - $values/gitops/values/azure-metrics-exporter/role-{{ index .metadata.labels "role" }}.yaml
+              - $values/gitops/values/azure-metrics-exporter/cluster-{{ .name }}.yaml
+        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: '{{ .server }}'
+        namespace: observability
+      syncPolicy:
+        automated: { prune: true, selfHeal: true }
+        syncOptions: [CreateNamespace=true, ServerSideApply=true]

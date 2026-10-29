@@ -1,0 +1,6 @@
+node_exporter_version: "1.8.2"
+otelcol_version: "0.115.0"
+dcgm_exporter_image: "nvcr.io/nvidia/k8s/dcgm-exporter:3.3.9-3.6.1-ubuntu22.04"
+kafka_bootstrap: "kafka-bootstrap.example.com:9093"
+kafka_user: "fluent-bit-dc1"
+otel_gateway_endpoint: "otel-gateway.example.com:4317"
