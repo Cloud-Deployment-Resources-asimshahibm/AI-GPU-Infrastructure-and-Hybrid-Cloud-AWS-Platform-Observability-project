@@ -19,7 +19,7 @@ spec:
     spec:
       project: observability
       source:
-        repoURL: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform.git
+        repoURL: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project.git
         targetRevision: main
         path: gitops/manifests/otel/agent
         directory:

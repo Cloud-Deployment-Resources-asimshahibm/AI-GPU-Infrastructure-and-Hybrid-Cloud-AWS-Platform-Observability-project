@@ -15,7 +15,7 @@ tests:
           - exp_labels: { severity: page, team: ai-platform, cluster: gpu-dc1, Hostname: n01, gpu: "0", UUID: GPU-1 }
             exp_annotations:
               summary: "XID 79 on GPU 0 of n01 (gpu-dc1)"
-              runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
+              runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/gpu-xid-error.md
       - eval_time: 3m
         alertname: GPUHighTemperature
         exp_alerts: []

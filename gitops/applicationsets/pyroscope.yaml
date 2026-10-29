@@ -29,7 +29,7 @@ spec:
               - $values/gitops/values/pyroscope/values.yaml
               - $values/gitops/values/pyroscope/role-{{ index .metadata.labels "role" }}.yaml
               - $values/gitops/values/pyroscope/cluster-{{ .name }}.yaml
-        - repoURL: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform.git
+        - repoURL: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project.git
           targetRevision: main
           ref: values
       destination:
