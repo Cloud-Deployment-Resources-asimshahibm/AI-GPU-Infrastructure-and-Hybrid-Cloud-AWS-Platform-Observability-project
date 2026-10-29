@@ -1,4 +1,4 @@
-# Hybrid On-Premise AI GPU + AWS/Azure Cloud Observability Platform
+# Hybrid On-Premise AI GPU + AWS/Azure Cloud Observability Platform Setup Project
 
 Production-grade, GitOps-managed observability for **on-premise AI/GPU data center clusters**, **AWS (EKS)** and **Azure (AKS)** —
 metrics, logs, traces, profiles, alerting and SLOs in one platform.
