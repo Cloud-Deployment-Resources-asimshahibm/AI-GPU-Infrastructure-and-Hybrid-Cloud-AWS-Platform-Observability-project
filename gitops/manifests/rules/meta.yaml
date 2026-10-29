@@ -13,59 +13,59 @@ spec:
           labels: { severity: none, team: observability-platform }
           annotations:
             summary: "Always-firing heartbeat; its absence means alerting is broken"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
         - alert: DCGMExporterDown
           expr: up{job=~".*dcgm.*"} == 0
           for: 5m
           labels: { severity: page, team: observability-platform }
           annotations:
             summary: "DCGM exporter {{ $labels.instance }} down on {{ $labels.cluster }}"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/dcgm-exporter-down.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/dcgm-exporter-down.md
         - alert: ScrapeTargetDown
           expr: up == 0
           for: 10m
           labels: { severity: warning, team: observability-platform }
           annotations:
             summary: "{{ $labels.job }} target {{ $labels.instance }} down on {{ $labels.cluster }}"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/dcgm-exporter-down.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/dcgm-exporter-down.md
         - alert: VectorKafkaConsumerLagHigh
           expr: sum by (consumergroup) (kafka_consumergroup_lag{consumergroup="vector-logs"}) > 1000000
           for: 15m
           labels: { severity: page, team: observability-platform }
           annotations:
             summary: "Vector is {{ $value }} messages behind on logs.raw"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/kafka-consumer-lag.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/kafka-consumer-lag.md
         - alert: OTelCollectorDroppingSpans
           expr: sum by (cluster, service_instance_id) (rate(otelcol_processor_refused_spans_total[5m])) > 0
           for: 10m
           labels: { severity: warning, team: observability-platform }
           annotations:
             summary: "OTel collector refusing spans on {{ $labels.cluster }}"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/kafka-consumer-lag.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/kafka-consumer-lag.md
         - alert: ThanosCompactHalted
           expr: thanos_compact_halted == 1
           for: 5m
           labels: { severity: page, team: observability-platform }
           annotations:
             summary: "Thanos compactor halted; downsampling and retention stopped"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
         - alert: PrometheusRuleEvaluationFailures
           expr: increase(prometheus_rule_evaluation_failures_total[10m]) > 0
           labels: { severity: warning, team: observability-platform }
           annotations:
             summary: "Rule evaluation failing on {{ $labels.cluster }}"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/watchdog-missing.md
         - alert: TenantNearIngestionLimit
           expr: sum by (tenant) (rate(loki_distributor_bytes_received_total[5m])) / (20 * 1024 * 1024) > 0.8
           for: 15m
           labels: { severity: ticket, team: observability-platform }
           annotations:
             summary: "Loki tenant {{ $labels.tenant }} above 80% of ingestion limit"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/retention.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/retention.md
         - alert: HighCardinalityMetric
           expr: max by (cluster, job) (scrape_samples_post_metric_relabeling) > 150000
           for: 30m
           labels: { severity: ticket, team: observability-platform }
           annotations:
             summary: "{{ $labels.job }} on {{ $labels.cluster }} exposes {{ $value }} samples per scrape"
-            runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/conventions.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/conventions.md

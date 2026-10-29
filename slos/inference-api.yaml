@@ -19,7 +19,7 @@ spec:
         name: InferenceAPIAvailability
         labels: { team: ai-platform }
         annotations:
-          runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/inference-availability.md
+          runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/inference-availability.md
         pageAlert: { labels: { severity: page } }
         ticketAlert: { labels: { severity: ticket } }
     - name: time-to-first-token
@@ -33,6 +33,6 @@ spec:
         name: InferenceTTFT
         labels: { team: ai-platform }
         annotations:
-          runbook_url: https://github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/blob/main/docs/runbooks/inference-availability.md
+          runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/blob/main/docs/runbooks/inference-availability.md
         pageAlert: { labels: { severity: page } }
         ticketAlert: { labels: { severity: ticket } }

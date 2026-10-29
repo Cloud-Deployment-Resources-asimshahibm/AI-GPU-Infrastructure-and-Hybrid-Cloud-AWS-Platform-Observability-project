@@ -1,4 +1,4 @@
-module github.com/asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Azure-Platform-Observability-project/libs/obs-go
+module github.com/Cloud-Deployment-Resources-asimshahibm/AI-GPU-Infrastructure-and-Cloud-AWS-Platform-Observability-project/libs/obs-go
 
 go 1.22
 
