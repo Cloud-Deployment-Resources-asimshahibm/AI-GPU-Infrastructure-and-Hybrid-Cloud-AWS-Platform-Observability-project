@@ -1,4 +1,4 @@
-module github.com/asimshahibm/hybrid-observability-platform/libs/obs-go
+module github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/libs/obs-go
 
 go 1.22
 

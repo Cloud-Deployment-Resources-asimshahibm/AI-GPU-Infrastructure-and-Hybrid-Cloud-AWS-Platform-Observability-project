@@ -19,7 +19,7 @@ spec:
     spec:
       project: observability
       source:
-        repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        repoURL: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform.git
         targetRevision: main
         path: gitops/manifests/policies
         directory:

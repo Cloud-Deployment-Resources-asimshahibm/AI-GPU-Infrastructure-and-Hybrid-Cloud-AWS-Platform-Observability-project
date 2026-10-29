@@ -14,34 +14,34 @@ spec:
           labels: { severity: page, team: ai-platform }
           annotations:
             summary: "XID {{ $value }} on GPU {{ $labels.gpu }} of {{ $labels.Hostname }} ({{ $labels.cluster }})"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
         - alert: GPUDoubleBitECCError
           expr: increase(DCGM_FI_DEV_ECC_DBE_VOL_TOTAL[10m]) > 0
           labels: { severity: page, team: ai-platform }
           annotations:
             summary: "Uncorrectable ECC errors on GPU {{ $labels.gpu }} of {{ $labels.Hostname }}"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-ecc-dbe.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-ecc-dbe.md
         - alert: GPUHighTemperature
           expr: DCGM_FI_DEV_GPU_TEMP > 85
           for: 5m
           labels: { severity: warning, team: ai-platform }
           annotations:
             summary: "GPU {{ $labels.gpu }} on {{ $labels.Hostname }} at {{ $value }}C for 5m"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/gpu-xid-error.md
         - alert: GPUMemoryNearlyFull
           expr: DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE) > 0.95
           for: 10m
           labels: { severity: warning, team: ai-platform }
           annotations:
             summary: "GPU {{ $labels.gpu }} on {{ $labels.Hostname }} memory above 95% for 10m"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md
         - alert: GPUFallenOffBus
           expr: count by (cluster, Hostname) (DCGM_FI_DEV_GPU_UTIL offset 15m) unless count by (cluster, Hostname) (DCGM_FI_DEV_GPU_UTIL)
           for: 5m
           labels: { severity: page, team: ai-platform }
           annotations:
             summary: "GPUs on {{ $labels.Hostname }} stopped reporting (fell off bus or exporter down)"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/dcgm-exporter-down.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/dcgm-exporter-down.md
     - name: gpu-inference
       rules:
         - record: model:time_to_first_token_seconds:p95_5m
@@ -52,4 +52,4 @@ spec:
           labels: { severity: warning, team: ai-platform }
           annotations:
             summary: "{{ $value }} requests waiting for {{ $labels.model_name }} on {{ $labels.cluster }}"
-            runbook_url: https://github.com/asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md
+            runbook_url: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform/blob/main/docs/runbooks/inference-availability.md

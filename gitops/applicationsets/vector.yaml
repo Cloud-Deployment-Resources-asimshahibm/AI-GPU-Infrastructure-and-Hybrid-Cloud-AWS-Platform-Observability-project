@@ -29,7 +29,7 @@ spec:
               - $values/gitops/values/vector/values.yaml
               - $values/gitops/values/vector/role-{{ index .metadata.labels "role" }}.yaml
               - $values/gitops/values/vector/cluster-{{ .name }}.yaml
-        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        - repoURL: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform.git
           targetRevision: main
           ref: values
       destination:

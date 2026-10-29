@@ -29,7 +29,7 @@ spec:
               - $values/gitops/values/kube-prometheus-stack/values.yaml
               - $values/gitops/values/kube-prometheus-stack/role-{{ index .metadata.labels "role" }}.yaml
               - $values/gitops/values/kube-prometheus-stack/cluster-{{ .name }}.yaml
-        - repoURL: https://github.com/asimshahibm/hybrid-observability-platform.git
+        - repoURL: https://github.com/Cloud-Deployment-Resources-asimshahibm/hybrid-observability-platform.git
           targetRevision: main
           ref: values
       destination:

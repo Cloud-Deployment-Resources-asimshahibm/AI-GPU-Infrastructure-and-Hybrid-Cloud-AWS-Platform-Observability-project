@@ -6,7 +6,7 @@
 dependencies:
   - name: observability-onboarding
     version: 0.1.0
-    repository: oci://ghcr.io/asimshahibm/charts
+    repository: oci://ghcr.io/cloud-deployment-resources-asimshahibm/charts
 ```
 2. Set values:
 ```yaml

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: scorecard
-          image: ghcr.io/asimshahibm/coverage-scorecard:0.1.0
+          image: ghcr.io/cloud-deployment-resources-asimshahibm/coverage-scorecard:0.1.0
           ports: [{ name: http-metrics, containerPort: 9100 }]
           volumeMounts: [{ name: catalog, mountPath: /config }]
           resources:
